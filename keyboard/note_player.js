@@ -15,7 +15,7 @@ class NotePlayer{
         osc.connect(this.amp).connect(this.audio_ctx.destination);
         osc.start();
     }
-    end(noteId){
+    stop(noteId){
         if(!this.note_playing[noteId])return;
         var osc=this.note_playing[noteId];
         osc.stop();
