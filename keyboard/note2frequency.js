@@ -7,4 +7,7 @@ class Note2Frequency{
             midi[i]=(a/32)*Math.pow(2,((i-9)/12));
         }
     }
+    getFrequencyById(id){
+        return this.note[id];
+    }
 }
