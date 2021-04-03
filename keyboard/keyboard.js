@@ -19,3 +19,35 @@ Keyboard.keys=[
     ['U','I','O','P','A','S','D','F']
 ];
 
+class Sequence{
+    constructor(seq_str){
+        if(!seq_str){
+            this.len=0;
+            this.notes=[];
+        }
+        else if(seq_str.constructor==String){//parse from JSON
+            //import notes from notes if notes has value
+            var data=JSON.parse(seq_str);
+            this.len=data["len"];
+            this.notes=data["notes"];
+        }
+        else if(seq_str.constructor==){//parse from MIDI binary
+            throw "Not Implemented!";
+        }
+        else{
+            throw "Not Supported Import Format";
+        }
+    }
+    addNote(note_id,note_len){
+        this.notes.push({id:note_id,len:note_len});
+    }
+    toString(){
+        //export to string, the work of ui is up to main.html
+        var data={len: this.len,notes: this.notes};
+        return JSON.stringify(data);
+    }
+    toMIDI(){
+        throw "Not Implemented!";
+    }
+}
+
