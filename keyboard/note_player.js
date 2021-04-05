@@ -20,6 +20,9 @@ class NotePlayer{
         var osc=this.note_playing[noteId];
         osc.stop();
     }
+    stopAll(){
+        for(let i=0;i<this.note_playing.length;++i)this.stop(i);
+    }
     set volume(value){
         this.amp.gain.value=value;
     }
