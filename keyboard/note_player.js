@@ -10,15 +10,20 @@ class NotePlayer{
     play(noteId){
         if(this.note_playing[noteId])return;
         var osc=this.audio_ctx.createOscillator();
+        var localAmp=this.audio_ctx.createGain();
+        localAmp.gain.value=1;
+        osc.type="square";
         osc.frequency.value=this.mapping.getFrequencyById(noteId);
-        this.note_playing[noteId]=osc;
-        osc.connect(this.amp).connect(this.audio_ctx.destination);
+        this.note_playing[noteId]=[osc,localAmp];
+        osc.connect(localAmp).connect(this.amp).connect(this.audio_ctx.destination);
         osc.start();
     }
     stop(noteId){
         if(!this.note_playing[noteId])return;
-        var osc=this.note_playing[noteId];
-        osc.stop();
+        var oscset=this.note_playing[noteId];
+        oscset[0].stop(this.audio_ctx.currentTime+0.2);
+        oscset[1].gain.linearRampToValueAtTime(0,this.audio_ctx.currentTime+0.2);
+        
         this.note_playing[noteId]=null;
     }
     stopAll(){
