@@ -19,6 +19,7 @@ class NotePlayer{
         if(!this.note_playing[noteId])return;
         var osc=this.note_playing[noteId];
         osc.stop();
+        this.note_playing[noteId]=null;
     }
     stopAll(){
         for(let i=0;i<this.note_playing.length;++i)this.stop(i);
