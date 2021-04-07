@@ -14,14 +14,18 @@ class Keyboard{
     }
     findKeyId(key){
         var key_pos=this.key_map[key];
-        return (4+key_pos[0])*(12)+key_pos[1];
+        if(key_pos)return (4+key_pos[0])*(12)+key_pos[1];
     }
     keyDown(key){
         var key_id=this.findKeyId(key);
-        this.player.play(key_id);
+        if(key_id)this.player.play(key_id);
     }
     keyUp(key){
+        //maybe some bugs will be here.
+        if(key.length>1)return;
         var key_id=this.findKeyId(key);
+        this.player.stop(key_id);
+        key_id=this.findKeyId(String.fromCharCode(key.charCodeAt(0)^32));
         this.player.stop(key_id);
     }
 }

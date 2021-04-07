@@ -9,6 +9,7 @@ class NotePlayer{
     }
     play(noteId){
         if(this.note_playing[noteId])return;
+        if(!this.mapping.getFrequencyById(noteId))return;
         var osc=this.audio_ctx.createOscillator();
         var localAmp=this.audio_ctx.createGain();
         localAmp.gain.value=1;
