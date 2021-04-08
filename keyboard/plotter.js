@@ -1,5 +1,7 @@
 function isWhiteKey(keyId){
-    return keyId%12%5%2==0;
+    var t=keyId%12;
+    t-=t>4;
+    return t%2==0;
 }
 //draw keys and notes
 class Plotter{
@@ -13,9 +15,21 @@ class Plotter{
     //keyDown and keyUp modify the state of the key and add note above keys
     keyDown(keyId){
         if(keyId<0||keyId>=this.keys.length)return;
+        var tarKey=this.keys[keyId];
+        if(isWhiteKey(keyId)){
+            tarKey.style.background="linear-gradient(2deg,#cccccc,white)";
+        }
+        else{
+        }
     }
     keyUp(keyId){
         if(keyId<0||keyId>=this.keys.length)return;
+        var tarKey=this.keys[keyId];
+        if(isWhiteKey(keyId)){
+            tarKey.style.background="white";
+        }
+        else{
+        }
     }
 
     draw(){
@@ -45,6 +59,7 @@ class Plotter{
         this.bkeys=[];
         var btb=document.createElement("table");
         btb.append(document.createElement("tr"));
+        //for each key, set its style according to its color
         for(let i=0;i<totalN;++i){
             if(isWhiteKey(i)){
                 this.keys[i].style.width=this.width/nWhiteKey+"px";
@@ -62,6 +77,8 @@ class Plotter{
         //add tables to document, and set their positions
         wtb.style.position="absolute";
         wtb.style.top=this.height/2+"px";
+        wtb.style.width=this.width/nWhiteKey*75+"px";
         document.body.append(wtb);
+        document.body.scrollTo(this.width/nWhiteKey*this.offset,0);
     }
 }
