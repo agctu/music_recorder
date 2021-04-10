@@ -3,6 +3,7 @@ class Keyboard{
     constructor(np,plotter){
         this.player=np;
         this.plotter=plotter;
+        this.mode="normal";//normal, replaying or recording
         this.nKeys;// should set one default here
         this.key_offset=40;// should change the value later 
         this.key_map={};
@@ -12,9 +13,20 @@ class Keyboard{
             }
         }
     }
+    startRecord(){
+        this.mode="recording";
+        this.sequence=new Sequence();
+    }
+    endRecord(){//should return one Sequence
+        this.mode="normal";
+        return this.sequence;
+    }
+    replay(seq){//replay the Sequence seq
+        this.mode="recording";
+    }
     findKeyId(key){
         var key_pos=this.key_map[key];
-        if(key_pos)return (4+key_pos[0])*(12)+key_pos[1];
+        if(key_pos)return (5+key_pos[0])*(12)+key_pos[1];
     }
     keyDown(key){
         var key_id=this.findKeyId(key);
