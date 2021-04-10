@@ -25,13 +25,16 @@ class Keyboard{
     keyUp(key){
         if(key.length>1)return;
         var key_id=this.findKeyId(key);
-        if(!key_id)return;
-        this.player.stop(key_id);
-        this.plotter.keyUp(key_id);
+        if(key_id){
+            this.player.stop(key_id);
+            this.plotter.keyUp(key_id);
+        }
         //maybe some bugs will be here.
         key_id=this.findKeyId(String.fromCharCode(key.charCodeAt(0)^32));
-        this.player.stop(key_id);
-        this.plotter.keyUp(key_id);
+        if(key_id){
+            this.player.stop(key_id);
+            this.plotter.keyUp(key_id);
+        }
     }
 }
 Keyboard.keys=[
