@@ -5,10 +5,11 @@ function isWhiteKey(keyId){
 }
 //draw keys and notes
 class Plotter{
-    constructor(nWhiteKey,offset){
+    constructor(nWhiteKey,offset,noteDisplayTime){
         this.width=window.innerWidth;
         this.height=window.innerHeight;
         this.offset=offset;
+        this.noteDisplayTime=noteDisplayTime;
         this.notes=[];
         this.initKeys(nWhiteKey);
     }
@@ -22,6 +23,21 @@ class Plotter{
         else{
             tarKey.style.background="linear-gradient(2deg,#777777,black)";
         }
+        //create a new note block
+        var newNote=this.createNote(keyId);
+        this.notes.push(newNote);
+    }
+    createNote(keyId){
+        var noteBlock=document.createElement("div");
+        noteBlock.position="absolute";
+        noteBlock.style.left=;
+        noteBlock.style.top=this.width/2;
+        noteBlock.style.width=isWhiteKey(keyId)?
+        this.width/this.nWhiteKey:
+        this.width/this.nWhiteKey*0.55;
+        noteBlock.style.height=0;
+        noteBlock.style.background="blue";
+        return {state: "pressed",block: noteBlock};
     }
     keyUp(keyId){
         if(keyId<0||keyId>=this.keys.length)return;
@@ -32,6 +48,7 @@ class Plotter{
         else{
             tarKey.style.background="black";
         }
+        //modify the state of the note
     }
 
     draw(){
