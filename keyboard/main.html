@@ -2,10 +2,12 @@
 <html>
     <head>
         <style>
+            body{background-color: grey;}
         </style>
         <script src="note2frequency.js"></script>
         <script src="note_player.js"></script>
         <script src="keyboard.js"></script>
+        <script src="plotter.js"></script>
         <script>
             //return the list of all selected is there are multiple ones, else return the first and the only item in the list.
             function $(query){
@@ -16,5 +18,23 @@
         </script>
     </head>
     <body>
+        <script>
+            const note_map=new Note2Frequency();
+            const note_player=new NotePlayer(note_map);
+            const plotter=new Plotter(21,4*7);
+            const keyboard=new Keyboard(note_player,plotter);
+            var tmp;
+            document.body.onkeydown=function(ev){
+                console.log(ev);
+                tmp=ev;
+                ev.preventDefault();
+                keyboard.keyDown(ev.key);
+            }
+            document.body.onkeyup=function(ev){
+                console.log(ev);
+                ev.preventDefault();
+                keyboard.keyUp(ev.key);
+            }
+        </script>
     </body>
 </html>
