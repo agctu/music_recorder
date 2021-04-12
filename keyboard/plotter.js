@@ -76,23 +76,20 @@ class Plotter{
         this.keys=[];
         //add all keys no matter it is visible
         for(let i=0;i<totalN;++i){
-            let key=document.createElement("td");
+            let key=document.createElement("div");
             this.keys.push(key);
         }
         //separate keys into two clusters
         this.wkeys=[];
-        var wtb=document.createElement("table");
-        wtb.append(document.createElement("tr"));
         this.bkeys=[];
         //for each key, set its style according to its color
         for(let i=0;i<totalN;++i){
             if(isWhiteKey(i)){
-                this.keys[i].style.width=this.whiteKeyWidth+"px";
+                this.keys[i].style.width=this.whiteKeyWidth*0.96+"px";
                 this.keys[i].style.height=this.height/2+"px";
                 this.keys[i].style.background="#ffffff";
                 this.keys[i].style.borderRadius="0px 0px 4px 4px";
                 this.wkeys.push(this.keys[i]);
-                wtb.firstElementChild.append(this.keys[i]);
             }
             else{//key is black
                 this.keys[i].style.width=this.blackKeyWidth+"px";
@@ -102,12 +99,14 @@ class Plotter{
                 this.bkeys.push(this.keys[i]);
             }
         }
-        //add tables to document, and set their positions
-        wtb.style.position="absolute";
-        wtb.style.left=0+"px";
-        wtb.style.top=this.height/2+"px";
-        wtb.style.width=this.whiteKeyWidth*75+"px";
-        document.body.append(wtb);
+        //append white keys separately,not in a table
+        for(let i=0;i<this.wkeys.length;++i){
+            this.wkeys[i].style.position="absolute";
+            this.wkeys[i].style.left=this.whiteKeyWidth*i+"px";
+            this.wkeys[i].style.top=this.height/2+"px";
+            this.wkeys[i].style.border="1px";
+            document.body.append(this.wkeys[i]);
+        }
         //document.body.scrollTo(this.whiteKeyWidth*this.offset,0);
 
         //don't put black keys in a table
