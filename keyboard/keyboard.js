@@ -7,6 +7,7 @@ class Keyboard{
         this.nKeys;// should set one default here
         this.key_offset=40;// should change the value later 
         this.key_map={};
+        this.key_playing=new Set();
         for(let i=0;i<Keyboard.keys.length;++i){
             for(let j=0;j<Keyboard.keys[i].length;++j){
                 this.key_map[Keyboard.keys[i][j]]=[i,j];
@@ -31,6 +32,8 @@ class Keyboard{
     keyDown(key){
         var key_id=this.findKeyId(key);
         if(!key_id)return;
+        if(this.key_playing.has(key_id))return;
+        this.key_playing.add(key_id);
         this.player.play(key_id);
         this.plotter.keyDown(key_id);
     }
@@ -38,12 +41,14 @@ class Keyboard{
         if(key.length>1)return;
         var key_id=this.findKeyId(key);
         if(key_id){
+            this.key_playing.delete(key_id);
             this.player.stop(key_id);
             this.plotter.keyUp(key_id);
         }
         //maybe some bugs will be here.
         key_id=this.findKeyId(String.fromCharCode(key.charCodeAt(0)^32));
         if(key_id){
+            this.key_playing.delete(key_id);
             this.player.stop(key_id);
             this.plotter.keyUp(key_id);
         }
