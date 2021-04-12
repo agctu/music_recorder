@@ -21,7 +21,7 @@
         <script>
             const note_map=new Note2Frequency();
             const note_player=new NotePlayer(note_map);
-            const plotter=new Plotter(21,4*7);
+            const plotter=new Plotter(21,4*7,10);
             const keyboard=new Keyboard(note_player,plotter);
             var tmp;
             document.body.onkeydown=function(ev){
@@ -35,6 +35,7 @@
                 ev.preventDefault();
                 keyboard.keyUp(ev.key);
             }
+            plotter.startLoop();
         </script>
     </body>
 </html>

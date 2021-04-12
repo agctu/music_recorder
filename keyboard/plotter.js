@@ -59,17 +59,34 @@ class Plotter{
         }
     }
 
-    draw(){
-        //draw black keys
-
-        //draw white keys
-
+    update(currentTime){
+        var diffPos=this.height/2*((currentTime-this.lastUpdateTime)/1000)/this.noteDisplayTime;
+        this.lastUpdateTime=currentTime;
+        for(let i=0,curBlock;i<this.notes.length;++i){
+            curBlock=this.notes[i].block;
+            curBlock.style.top=Number(curBlock.style.top.slice(0,-2))-diffPos+"px";
+            if(this.notes[i].state=="dynamic"){
+                curBlock.style.height=Number(curBlock.style.height.slice(0,-2))+diffPos+"px";
+            }
+            if(this.notes[i].state=="static"){
+                if(Number(curBlock.style.top.slice(0,-2))+Number(curBlock.style.height.slice(0,-2))<0){
+                    curBlock.remove();
+                    this.notes.splice(i,1);
+                    --i;
+                }
+            }
+        }
     }
-    startDraw(){
-        let tar=this;
-        tar.draw();
+    startLoop(tim){
+        var tar=this;
+        if(!this._update){
+            this._update=function(tim){
+                tar.update(tim);
+                requestAnimationFrame(tar._update);
+            }
+        }
         //FIXME how to stop this, because every anonymous function is different.
-        requestAnimationFrame(function(){tar.startDraw();});
+        requestAnimationFrame(this._update);
     }
     initKeys(){
         var totalN=128
