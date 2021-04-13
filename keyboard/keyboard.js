@@ -25,7 +25,29 @@ class Keyboard{
         return ret;
     }
     replay(seq){//replay the Sequence seq
-        this.mode="recording";
+        this.mode="replay";
+        this.sequence=seq;
+        var tar=this;
+        setTimeout(
+            this._replay,
+        seq.actions[0].time-seq.startTime,0);
+    }
+    //FIXME will these ugly codes bring me some side effect such as memory leak? 
+    _replay=function(id){
+        var action=tar.sequence.actions[id];
+        console.log(id+' '+action);
+        switch(action.type){
+            case "down": tar.keyDown(action.key); break;
+            case "up": tar.keyUp(action.key); break;
+        }
+        if(id==tar.sequence.length-1){
+            tar.sequence=null;
+            tar.mode="normal";
+            console.log("replaying over!");
+            return;
+        }
+        else
+            setTimeout(tar._replay,tar.sequence.actions[id+1].time-action.time,id+1);
     }
     findKeyId(key){
         var key_pos=this.key_map[key];
@@ -86,7 +108,7 @@ class Sequence{
     addAction(keyId,type,time){// enum type{down,up}, double time
         //FIXME Is the time gotten from here accurate?
         if(!time)time=new Date().getTime();
-        this.actions.push({id: keyId,type: type,time: time-this.startTime});
+        this.actions.push({key: keyId,type: type,time: time});
     }
     toString(){
         //export to string, the work of ui is up to main.html
