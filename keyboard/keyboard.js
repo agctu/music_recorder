@@ -28,26 +28,26 @@ class Keyboard{
         this.mode="replay";
         this.sequence=seq;
         var tar=this;
+        //FIXME will these ugly codes bring me some side effect such as memory leak? 
+        this._replay=function(id){
+            var action=tar.sequence.actions[id];
+            console.log(id+' '+action);
+            switch(action.type){
+                case "down": tar.keyDown(action.key); break;
+                case "up": tar.keyUp(action.key); break;
+            }
+            if(id==tar.sequence.length-1){
+                tar.sequence=null;
+                tar.mode="normal";
+                console.log("replaying over!");
+                return;
+            }
+            else
+                setTimeout(tar._replay,tar.sequence.actions[id+1].time-action.time,id+1);
+        }
         setTimeout(
             this._replay,
         seq.actions[0].time-seq.startTime,0);
-    }
-    //FIXME will these ugly codes bring me some side effect such as memory leak? 
-    _replay=function(id){
-        var action=tar.sequence.actions[id];
-        console.log(id+' '+action);
-        switch(action.type){
-            case "down": tar.keyDown(action.key); break;
-            case "up": tar.keyUp(action.key); break;
-        }
-        if(id==tar.sequence.length-1){
-            tar.sequence=null;
-            tar.mode="normal";
-            console.log("replaying over!");
-            return;
-        }
-        else
-            setTimeout(tar._replay,tar.sequence.actions[id+1].time-action.time,id+1);
     }
     findKeyId(key){
         var key_pos=this.key_map[key];
