@@ -20,7 +20,9 @@ class Keyboard{
     }
     endRecord(){//should return one Sequence
         this.mode="normal";
-        return this.sequence;
+        var ret=this.sequence;
+        this.sequence=null;
+        return ret;
     }
     replay(seq){//replay the Sequence seq
         this.mode="recording";
@@ -33,12 +35,14 @@ class Keyboard{
         var key_id=this.findKeyId(key);
         if(!key_id)return;
         if(this.key_playing.has(key_id))return;
+        if(this.mode=="recording")this.sequence.addAction(key,"down");
         this.key_playing.add(key_id);
         this.player.play(key_id);
         this.plotter.keyDown(key_id);
     }
     keyUp(key){
         if(key.length>1)return;
+        if(this.mode=="recording")this.sequence.addAction(key,"up");
         var key_id=this.findKeyId(key);
         if(key_id){
             this.key_playing.delete(key_id);
@@ -62,15 +66,15 @@ Keyboard.keys=[
 
 class Sequence{
     constructor(seq_str){
+        this.startTime=new Date().getTime();
         if(!seq_str){
-            this.len=0;
-            this.notes=[];
+            this.actions=[];
         }
         else if(seq_str.constructor==String){//parse from JSON
             //import notes from notes if notes has value
             var data=JSON.parse(seq_str);
             this.len=data["len"];
-            this.notes=data["notes"];
+            this.actions=data["actions"];
         }
         else if(seq_str.constructor==Array){//parse from MIDI binary
             throw "Not Implemented!";
@@ -79,13 +83,18 @@ class Sequence{
             throw "Not Supported Import Format";
         }
     }
-    addNote(note_id,note_len){
-        this.notes.push({id:note_id,len:note_len});
+    addAction(keyId,type,time){// enum type{down,up}, double time
+        //FIXME Is the time gotten from here accurate?
+        if(!time)time=new Date().getTime();
+        this.actions.push({id: keyId,type: type,time: time-this.startTime});
     }
     toString(){
         //export to string, the work of ui is up to main.html
-        var data={len: this.len,notes: this.notes};
+        var data={len: this.len,actions: this.actions};
         return JSON.stringify(data);
+    }
+    get length(){
+        return this.actions.length;
     }
     toMIDI(){
         throw "Not Implemented!";
