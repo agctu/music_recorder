@@ -3,7 +3,7 @@ class Keyboard{
     constructor(np,plotter){
         this.player=np;
         this.plotter=plotter;
-        this.mode="normal";//normal, replaying or recording
+        this.mode="normal";//( normal | replaying | recording )
         this.nKeys;// should set one default here
         this.key_offset=4;// should change the value later
         this.key_map={};
@@ -21,30 +21,36 @@ class Keyboard{
     endRecord(){//should return one Sequence
         this.mode="normal";
         var ret=this.sequence;
-        this.sequence=null;
+        delete this.sequence;
         return ret;
     }
     replay(seq){//replay the Sequence seq
         this.mode="replay";
         this.sequence=seq;
+        this.nextReplayNote=0;
         var tar=this;
         //FIXME will these ugly codes bring me some side effect such as memory leak? 
-        this._replay=function(id){
-            var action=tar.sequence.actions[id];
-            console.log(id+' '+action);
+        this._replay=function(){
+            var action=tar.sequence.actions[tar.nextReplayNote];
+            var key_id=tar.findKeyId(action.key);
+            console.log(tar.nextReplayNote+' '+action);
             switch(action.type){
-                case "down": tar.keyDown(action.key); break;
-                case "up": tar.keyUp(action.key); break;
+                case "down": tar._keyDown(key_id); break;
+                case "up": tar._keyUp(key_id); break;
             }
-            if(id==tar.sequence.length-1){
-                tar.sequence=null;
+            if(tar.nextReplayNote==tar.sequence.length-1){
+                delete tar.sequence;
                 tar.mode="normal";
+                delete tar.nextReplayNote;
+                tar.allKeyUp();
                 console.log("replaying over!");
-                return;
             }
-            else
-                setTimeout(tar._replay,tar.sequence.actions[id+1].time-action.time,id+1);
+            else{
+                setTimeout(tar._replay,tar.sequence.actions[tar.nextReplayNote+1].time-action.time);
+                ++tar.nextReplayNote;
+            }
         }
+        this.allKeyUp();
         setTimeout(
             this._replay,
         seq.actions[0].time-seq.startTime,0);
@@ -54,30 +60,58 @@ class Keyboard{
         if(key_pos)return (this.key_offset+key_pos[0])*(12)+key_pos[1];
     }
     keyDown(key){
+        if(key.length>1)return false;
         var key_id=this.findKeyId(key);
-        if(!key_id)return;
-        if(this.key_playing.has(key_id))return;
-        if(this.mode=="recording")this.sequence.addAction(key,"down");
+        if(!key_id)return false;
+        if(this.key_playing.has(key_id))return false;
+        switch(this.mode){
+            case "normal":
+                this._keyDown(key_id);
+                break;
+            case "recording":
+                this.sequence.addAction(key,"down");
+                this._keyDown(key_id);
+                break;
+            case "replaying":
+                break;
+        }
+        return true;//a key is pressed, so the default behaviors should be prevented.
+    }
+    _keyDown(key_id){
         this.key_playing.add(key_id);
         this.player.play(key_id);
         this.plotter.keyDown(key_id);
     }
-    keyUp(key){
+    keyUp(key,conjugateUp=true){
         if(key.length>1)return;
-        if(this.mode=="recording")this.sequence.addAction(key,"up");
         var key_id=this.findKeyId(key);
         if(key_id){
-            this.key_playing.delete(key_id);
-            this.player.stop(key_id);
-            this.plotter.keyUp(key_id);
+            switch(this.mode){
+                case "normal":
+                    this._keyUp(key_id);
+                    break;
+                case "recording":
+                    this.sequence.addAction(key,"up");
+                    this._keyUp(key_id);
+                    break;
+                case "replaying":
+                    break;
+            }
         }
         //maybe some bugs will be here.
-        key_id=this.findKeyId(String.fromCharCode(key.charCodeAt(0)^32));
-        if(key_id){
-            this.key_playing.delete(key_id);
-            this.player.stop(key_id);
-            this.plotter.keyUp(key_id);
-        }
+        if(conjugateUp)this.keyUp(this.getConjugateKey(key),false);
+    }
+    _keyUp(key_id){
+        this.key_playing.delete(key_id);
+        this.player.stop(key_id);
+        this.plotter.keyUp(key_id);
+    }
+    allKeyUp(){
+        for(let key_id of this.key_playing)this._keyUp(key_id);
+        this.key_playing.clear();
+    }
+    getConjugateKey(key){
+        return String.fromCharCode(key.charCodeAt(0)^32);
     }
     shiftRight(n){
         if(!n)n=1;

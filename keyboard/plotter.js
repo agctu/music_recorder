@@ -6,6 +6,10 @@ function isWhiteKey(keyId){
 //draw keys and notes
 class Plotter{
     blackKeyOffset=[0.5,1.8,3.5,4.7,5.8];
+    blackKeyDown="linear-gradient(2deg,#777777,black)";
+    blackKeyUp="black";
+    whiteKeyDown="linear-gradient(2deg,#cccccc,white)";
+    whiteKeyUp="white";
     constructor(nWhiteKey,offset,noteDisplayTime){
         this.width=window.innerWidth;
         this.height=window.innerHeight;
@@ -34,12 +38,9 @@ class Plotter{
     keyDown(keyId){
         if(keyId<0||keyId>=this.keys.length)return;
         var tarKey=this.keys[keyId];
-        if(isWhiteKey(keyId)){
-            tarKey.style.background="linear-gradient(2deg,#cccccc,white)";
-        }
-        else{
-            tarKey.style.background="linear-gradient(2deg,#777777,black)";
-        }
+        tarKey.style.background=isWhiteKey(keyId)?
+            this.whiteKeyDown:
+            this.blackKeyDown;
         //create a new note block
         var newNote=this.createNote(keyId);
         this.notes.push(newNote);
@@ -47,12 +48,9 @@ class Plotter{
     keyUp(keyId){
         if(keyId<0||keyId>=this.keys.length)return;
         var tarKey=this.keys[keyId];
-        if(isWhiteKey(keyId)){
-            tarKey.style.background="white";
-        }
-        else{
-            tarKey.style.background="black";
-        }
+        tarKey.style.background=isWhiteKey(keyId)?
+            this.whiteKeyUp:
+            this.blackKeyUp;
         //modify the state of the note
         for(let i=0;i<this.notes.length;++i)if(this.notes[i].state=="dynamic"&&this.notes[i].id==keyId){
             this.notes[i].state="static";
@@ -68,7 +66,7 @@ class Plotter{
             if(this.notes[i].state=="dynamic"){
                 curBlock.style.height=Number(curBlock.style.height.slice(0,-2))+diffPos+"px";
             }
-            if(this.notes[i].state=="static"){
+            else if(this.notes[i].state=="static"){
                 if(Number(curBlock.style.top.slice(0,-2))+Number(curBlock.style.height.slice(0,-2))<0){
                     curBlock.remove();
                     this.notes.splice(i,1);
@@ -97,24 +95,22 @@ class Plotter{
             this.keys.push(key);
         }
         //separate keys into two clusters
-        this.wkeys=[];
-        this.bkeys=[];
+        this.wkeys=[],this.bkeys=[];
         //for each key, set its style according to its color
         for(let i=0;i<totalN;++i){
-            if(isWhiteKey(i)){
-                this.keys[i].style.width=this.whiteKeyWidth*0.96+"px";
-                this.keys[i].style.height=this.height/2+"px";
-                this.keys[i].style.background="#ffffff";
-                this.keys[i].style.borderRadius="0px 0px 4px 4px";
-                this.wkeys.push(this.keys[i]);
-            }
-            else{//key is black
-                this.keys[i].style.width=this.blackKeyWidth+"px";
-                this.keys[i].style.height=this.height/4+"px";
-                this.keys[i].style.background="#000000";
-                this.keys[i].style.borderRadius="0px 0px 4px 4px";
-                this.bkeys.push(this.keys[i]);
-            }
+            if(isWhiteKey(i)) this.wkeys.push(this.keys[i]);
+            else this.bkeys.push(this.keys[i]);
+        }
+        this.initWhiteKeys();
+        this.initBlackKeys();
+        //document.body.scrollTo(this.whiteKeyWidth*this.offset,0);
+    }
+    initWhiteKeys(){
+        for(let i=0;i<this.wkeys.length;++i){
+            this.wkeys[i].style.width=this.whiteKeyWidth*0.96+"px";
+            this.wkeys[i].style.height=this.height/2+"px";
+            this.wkeys[i].style.background="#ffffff";
+            this.wkeys[i].style.borderRadius="0px 0px 4px 4px";
         }
         //append white keys separately,not in a table
         for(let i=0;i<this.wkeys.length;++i){
@@ -124,8 +120,14 @@ class Plotter{
             this.wkeys[i].style.border="1px";
             document.body.append(this.wkeys[i]);
         }
-        //document.body.scrollTo(this.whiteKeyWidth*this.offset,0);
-
+    }
+    initBlackKeys(){
+        for(let i=0;i<this.bkeys.length;++i){
+            this.bkeys[i].style.width=this.blackKeyWidth+"px";
+            this.bkeys[i].style.height=this.height/4+"px";
+            this.bkeys[i].style.background="#000000";
+            this.bkeys[i].style.borderRadius="0px 0px 4px 4px";
+        }
         //don't put black keys in a table
         for(let i=0;i<this.bkeys.length;++i){
             this.bkeys[i].style.position="absolute";

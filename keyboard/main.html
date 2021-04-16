@@ -27,8 +27,9 @@
             document.body.onkeydown=function(ev){
                 console.log(ev);
                 tmp=ev;
-                ev.preventDefault();
-                keyboard.keyDown(ev.key);
+                if(keyboard.keyDown(ev.key)){
+                    ev.preventDefault();
+                }
             }
             document.body.onkeyup=function(ev){
                 console.log(ev);
