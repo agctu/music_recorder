@@ -5,7 +5,7 @@ class Keyboard{
         this.plotter=plotter;
         this.mode="normal";//normal, replaying or recording
         this.nKeys;// should set one default here
-        this.key_offset=40;// should change the value later 
+        this.key_offset=4;// should change the value later
         this.key_map={};
         this.key_playing=new Set();
         for(let i=0;i<Keyboard.keys.length;++i){
@@ -51,7 +51,7 @@ class Keyboard{
     }
     findKeyId(key){
         var key_pos=this.key_map[key];
-        if(key_pos)return (5+key_pos[0])*(12)+key_pos[1];
+        if(key_pos)return (this.key_offset+key_pos[0])*(12)+key_pos[1];
     }
     keyDown(key){
         var key_id=this.findKeyId(key);
@@ -78,6 +78,20 @@ class Keyboard{
             this.player.stop(key_id);
             this.plotter.keyUp(key_id);
         }
+    }
+    shiftRight(n){
+        if(!n)n=1;
+        this.key_offset=Math.min(
+            this.key_offset+n,
+            Math.ceil(this.key_map.note.length/12)
+        );
+    }
+    shiftLeft(n){
+        if(!n)n=1;
+        this.key_offset=Math.max(
+            this.key_offset-n,
+            0
+        );
     }
 }
 Keyboard.keys=[
