@@ -22,10 +22,12 @@ class Plotter{
         this.mode="normal";//( normal | replay )
     }
 
-    startReplay(tar){
+    startReplay(seq){
+        console.log("plotter start replaying");
         this.mode="replaying";
         this.clearAllNotes();
-        var seq=tar.sequence,t=0;
+        this.sequence=seq;
+        this.nextReplayNote=0;
         //use seq to init notes which will have been visible at the beginning of the sequence.
         for(let i=0;i<seq.actions.length&&(seq.actions[i].time-seq.startTime)/1000<this.noteDisplayTime;++i){
             var action=seq.actions[i];
@@ -34,19 +36,41 @@ class Plotter{
                 this.updateByDiffTime(action.time-seq.actions[i-1].time);
             }
             switch(action.type){
-                case "down": this.keyDown(key_id); break;
-                case "up": this.keyUp(key_id); break;
+                case "down": this.addNewNote(key_id); break;
+                case "up": this.changeNoteState(key_id); break;
             }
-            ++t;
+            ++this.nextReplayNote;
         }
-        this.skipActions=t;
         //this.updateByDiffTime(seq.actions[0].time-seq.startTime);
-        this.updateByDiffTime(this.noteDisplayTime*1000-(seq.actions[this.skipActions-1].time-seq.startTime));
+        this.updateByDiffTime(this.noteDisplayTime*1000-(seq.actions[this.nextReplayNote-1].time-seq.startTime));
+        var tar=this;
+        //FIXME the same potential problem as Keyboard._replay.
+        this._replay=function(){
+            var action=tar.sequence.actions[tar.nextReplayNote];
+            var key_id=action.key;
+            switch(action.type){
+                case "down": tar.addNewNote(key_id); break;
+                case "up": tar.changeNoteState(key_id); break;
+            }
+            if(tar.nextReplayNote==tar.sequence.length-1){
+                delete tar.sequence;
+                delete tar.nextReplayNote;
+                //no need to clear note, because when the replaying is over, all notes should lay below notekeys.
+            }
+            else{
+                setTimeout(tar._replay,tar.sequence.actions[tar.nextReplayNote+1].time-action.time);
+                ++tar.nextReplayNote;
+            }
+
+        }
+        if(this.nextReplayNote==seq.length)return;
+        setTimeout(
+            this._replay,
+            seq.actions[this.nextReplayNote].time-seq.startTime-this.noteDisplayTime*1000
+        );
     }
     endReplay(){
         this.mode="normal";
-        delete this.skipActions;
-        //no need to clear note, because when the replaying is over, all notes should lay below notekeys.
     }
     clearAllNotes(){
         for(let note of this.notes){
@@ -84,10 +108,10 @@ class Plotter{
         tarKey.style.background=isWhiteKey(keyId)?
             this.whiteKeyDown:
             this.blackKeyDown;
-        if(this.mode=="replaying"&&this.skipActions){
-            --this.skipActions;
-            return;
-        }
+        if(this.mode=="replaying")return;
+        this.addNewNote(keyId);
+    }
+    addNewNote(keyId){
         //create a new note block
         var newNote=this.createNote(keyId);
         this.notes.push(newNote);
@@ -98,10 +122,10 @@ class Plotter{
         tarKey.style.background=isWhiteKey(keyId)?
             this.whiteKeyUp:
             this.blackKeyUp;
-        if(this.mode=="replaying"&&this.skipActions){
-            --this.skipActions;
-            return;
-        }
+        if(this.mode=="replaying")return;
+        this.changeNoteState(keyId);
+    }
+    changeNoteState(keyId){
         //modify the state of the note
         for(let i=0;i<this.notes.length;++i)if(this.notes[i].state=="dynamic"&&this.notes[i].id==keyId){
             this.notes[i].state="static";

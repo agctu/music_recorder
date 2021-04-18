@@ -30,6 +30,10 @@ class Keyboard{
         return ret;
     }
     replay(seq){//replay the Sequence seq
+        if(seq.length==0){
+            alert("sequence is empty!");
+            return;
+        }
         this.mode="replay";
         this.sequence=seq;
         this.nextReplayNote=0;
@@ -57,10 +61,11 @@ class Keyboard{
             }
         }
         this.allKeyUp();
-        this.plotter.startReplay(this);
+        this.plotter.startReplay(this.sequence);
         setTimeout(
             this._replay,
-        seq.actions[0].time-seq.startTime,0);
+            seq.actions[0].time-seq.startTime
+        );
     }
     findKeyId(key){
         var key_pos=this.key_map[key];
@@ -71,6 +76,7 @@ class Keyboard{
         var key_id=this.findKeyId(key);
         if(!key_id)return false;
         if(this.key_playing.has(key_id))return false;
+        this.key_playing.add(key_id);
         switch(this.mode){
             case "normal":
                 this._keyDown(key_id);
@@ -85,13 +91,13 @@ class Keyboard{
         return true;//a key is pressed, so the default behaviors should be prevented.
     }
     _keyDown(key_id){
-        this.key_playing.add(key_id);
         this.player.play(key_id);
         this.plotter.keyDown(key_id);
     }
     keyUp(key,conjugateUp=true){
         if(key.length>1)return;
         var key_id=this.findKeyId(key);
+        this.key_playing.delete(key_id);
         if(key_id){
             switch(this.mode){
                 case "normal":
@@ -109,7 +115,6 @@ class Keyboard{
         if(conjugateUp)this.keyUp(this.getConjugateKey(key),false);
     }
     _keyUp(key_id){
-        this.key_playing.delete(key_id);
         this.player.stop(key_id);
         this.plotter.keyUp(key_id);
     }
