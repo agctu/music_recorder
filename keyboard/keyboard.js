@@ -19,8 +19,13 @@ class Keyboard{
         this.sequence=new Sequence();
     }
     endRecord(){//should return one Sequence
+        //add keyup for all keys not up
+        for(let i of this.key_playing){
+            this.sequence.addAction(i,"up");
+        }
         this.mode="normal";
         var ret=this.sequence;
+        ret.end();
         delete this.sequence;
         return ret;
     }
@@ -32,7 +37,7 @@ class Keyboard{
         //FIXME will these ugly codes bring me some side effect such as memory leak? 
         this._replay=function(){
             var action=tar.sequence.actions[tar.nextReplayNote];
-            var key_id=tar.findKeyId(action.key);
+            var key_id=action.key;
             console.log(tar.nextReplayNote+' '+action);
             switch(action.type){
                 case "down": tar._keyDown(key_id); break;
@@ -43,6 +48,7 @@ class Keyboard{
                 tar.mode="normal";
                 delete tar.nextReplayNote;
                 tar.allKeyUp();
+                tar.plotter.endReplay();
                 console.log("replaying over!");
             }
             else{
@@ -51,6 +57,7 @@ class Keyboard{
             }
         }
         this.allKeyUp();
+        this.plotter.startReplay(this);
         setTimeout(
             this._replay,
         seq.actions[0].time-seq.startTime,0);
@@ -69,7 +76,7 @@ class Keyboard{
                 this._keyDown(key_id);
                 break;
             case "recording":
-                this.sequence.addAction(key,"down");
+                this.sequence.addAction(key_id,"down");
                 this._keyDown(key_id);
                 break;
             case "replaying":
@@ -91,7 +98,7 @@ class Keyboard{
                     this._keyUp(key_id);
                     break;
                 case "recording":
-                    this.sequence.addAction(key,"up");
+                    this.sequence.addAction(key_id,"up");
                     this._keyUp(key_id);
                     break;
                 case "replaying":
@@ -157,6 +164,9 @@ class Sequence{
         //FIXME Is the time gotten from here accurate?
         if(!time)time=new Date().getTime();
         this.actions.push({key: keyId,type: type,time: time});
+    }
+    end(){
+        this.endTime=new Date().getTime();
     }
     toString(){
         //export to string, the work of ui is up to main.html

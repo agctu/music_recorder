@@ -19,16 +19,59 @@ class Plotter{
         this.noteDisplayTime=noteDisplayTime;
         this.notes=[];
         this.initKeys();
+        this.mode="normal";//( normal | replay )
+    }
+
+    startReplay(tar){
+        this.mode="replaying";
+        this.clearAllNotes();
+        var seq=tar.sequence,t=0;
+        //use seq to init notes which will have been visible at the beginning of the sequence.
+        for(let i=0;i<seq.actions.length&&(seq.actions[i].time-seq.startTime)/1000<this.noteDisplayTime;++i){
+            var action=seq.actions[i];
+            var key_id=action.key;
+            if(i!=0){
+                this.updateByDiffTime(action.time-seq.actions[i-1].time);
+            }
+            switch(action.type){
+                case "down": this.keyDown(key_id); break;
+                case "up": this.keyUp(key_id); break;
+            }
+            ++t;
+        }
+        this.skipActions=t;
+        //this.updateByDiffTime(seq.actions[0].time-seq.startTime);
+        this.updateByDiffTime(this.noteDisplayTime*1000-(seq.actions[this.skipActions-1].time-seq.startTime));
+    }
+    endReplay(){
+        this.mode="normal";
+        delete this.skipActions;
+        //no need to clear note, because when the replaying is over, all notes should lay below notekeys.
+    }
+    clearAllNotes(){
+        for(let note of this.notes){
+            note.block.remove();
+        }
+        this.notes.length=0;
     }
     createNote(keyId){
         var noteBlock=document.createElement("div");
         noteBlock.style.position="absolute";
+        noteBlock.style.zIndex=-1;
+        switch(this.mode){
+            case "normal":
+                noteBlock.style.top=this.height/2+"px";
+                noteBlock.style.height=0+"px";
+                break;
+            case "replaying":
+                noteBlock.style.top=0+"px";
+                noteBlock.style.height=0+"px";
+                break;
+        }
         noteBlock.style.left=this.getKeyLeftPosition(keyId)+"px";
-        noteBlock.style.top=this.height/2+"px";
         noteBlock.style.width=(isWhiteKey(keyId)?
         this.whiteKeyWidth:
         this.blackKeyWidth)+"px";
-        noteBlock.style.height=0+"px";
         noteBlock.style.background="#99f";
         noteBlock.style.borderRadius="5px 5px 5px 5px";
         document.body.append(noteBlock);
@@ -41,6 +84,10 @@ class Plotter{
         tarKey.style.background=isWhiteKey(keyId)?
             this.whiteKeyDown:
             this.blackKeyDown;
+        if(this.mode=="replaying"&&this.skipActions){
+            --this.skipActions;
+            return;
+        }
         //create a new note block
         var newNote=this.createNote(keyId);
         this.notes.push(newNote);
@@ -51,6 +98,10 @@ class Plotter{
         tarKey.style.background=isWhiteKey(keyId)?
             this.whiteKeyUp:
             this.blackKeyUp;
+        if(this.mode=="replaying"&&this.skipActions){
+            --this.skipActions;
+            return;
+        }
         //modify the state of the note
         for(let i=0;i<this.notes.length;++i)if(this.notes[i].state=="dynamic"&&this.notes[i].id==keyId){
             this.notes[i].state="static";
@@ -58,20 +109,42 @@ class Plotter{
     }
 
     update(currentTime){
-        var diffPos=this.height/2*((currentTime-this.lastUpdateTime)/1000)/this.noteDisplayTime;
+        var diffTime=currentTime-this.lastUpdateTime;
         this.lastUpdateTime=currentTime;
+        this.updateByDiffTime(diffTime);
+    }
+    updateByDiffTime(diffTime){
+        //if(this.notes[0])console.log(this.notes[0].block.style.top);
+        var diffPos=this.height/2*((diffTime)/1000)/this.noteDisplayTime;
         for(let i=0,curBlock;i<this.notes.length;++i){
             curBlock=this.notes[i].block;
-            curBlock.style.top=Number(curBlock.style.top.slice(0,-2))-diffPos+"px";
-            if(this.notes[i].state=="dynamic"){
-                curBlock.style.height=Number(curBlock.style.height.slice(0,-2))+diffPos+"px";
-            }
-            else if(this.notes[i].state=="static"){
-                if(Number(curBlock.style.top.slice(0,-2))+Number(curBlock.style.height.slice(0,-2))<0){
-                    curBlock.remove();
-                    this.notes.splice(i,1);
-                    --i;
-                }
+            switch(this.mode){
+                case "normal":
+                    curBlock.style.top=Number(curBlock.style.top.slice(0,-2))-diffPos+"px";
+                    if(this.notes[i].state=="dynamic"){
+                        curBlock.style.height=Number(curBlock.style.height.slice(0,-2))+diffPos+"px";
+                    }
+                    else if(this.notes[i].state=="static"){
+                        if(Number(curBlock.style.top.slice(0,-2))+Number(curBlock.style.height.slice(0,-2))<0){
+                            curBlock.remove();
+                            this.notes.splice(i,1);
+                            --i;
+                        }
+                    }
+                    break;
+                case "replaying":
+                    if(this.notes[i].state=="dynamic"){
+                        curBlock.style.height=Number(curBlock.style.height.slice(0,-2))+diffPos+"px";
+                    }
+                    else if(this.notes[i].state=="static"){
+                        curBlock.style.top=Number(curBlock.style.top.slice(0,-2))+diffPos+"px";
+                        if(Number(curBlock.style.top.slice(0,-2))>this.height/2){
+                            curBlock.remove();
+                            this.notes.splice(i,1);
+                            --i;
+                        }
+                    }
+                    break;
             }
         }
     }
