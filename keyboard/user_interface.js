@@ -4,7 +4,7 @@ function isWhiteKey(keyId){
     return t%2==0;
 }
 //draw keys and notes
-class Plotter{
+class UserInterface{
     blackKeyOffset=[0.5,1.8,3.5,4.7,5.8];
     blackKeyDown="linear-gradient(2deg,#777777,black)";
     blackKeyUp="black";
