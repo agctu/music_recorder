@@ -105,7 +105,7 @@ class Keyboard{
     }
     keyUp(key,conjugateUp=true){
         var key_id=this.checkAndGetKeyId(key);
-        if(!key_id)return false;
+        //even if key_id==null,don't return maybe a white key without a corresponding black key is released when shift is pressed. Otherwise the key is not released and still play the note.
         this.key_playing.delete(key_id);
         if(key_id){
             switch(this.mode){
