@@ -71,9 +71,18 @@ class Keyboard{
         var key_pos=this.key_map[key];
         if(key_pos)return (this.key_offset+key_pos[0])*(12)+key_pos[1];
     }
+    solveShift(){
+        console.log("solve shift");
+        var len=this.key_playing.size;
+        for(let key_id of this.key_playing.values()){
+            if(!len--)return;
+            let conjugate=this.getConjugateKeyId(key_id);
+            this.keyUp(key_id);
+            this.keyDown(conjugate);
+        }
+    }
     keyDown(key){
-        if(key.length>1)return false;
-        var key_id=this.findKeyId(key);
+        var key_id=this.checkAndGetKeyId(key);
         if(!key_id)return false;
         if(this.key_playing.has(key_id))return false;
         this.key_playing.add(key_id);
@@ -95,8 +104,8 @@ class Keyboard{
         this.plotter.keyDown(key_id);
     }
     keyUp(key,conjugateUp=true){
-        if(key.length>1)return;
-        var key_id=this.findKeyId(key);
+        var key_id=this.checkAndGetKeyId(key);
+        if(!key_id)return false;
         this.key_playing.delete(key_id);
         if(key_id){
             switch(this.mode){
@@ -112,11 +121,26 @@ class Keyboard{
             }
         }
         //maybe some bugs will be here.
-        if(conjugateUp)this.keyUp(this.getConjugateKey(key),false);
+        if(key.constructor==String&&conjugateUp){
+            this.keyUp(this.getConjugateKey(key),false);
+            return true;
+        }
     }
     _keyUp(key_id){
         this.player.stop(key_id);
         this.plotter.keyUp(key_id);
+    }
+    checkAndGetKeyId(key){
+        if(key=="Shift"){
+            this.solveShift();
+            return null;
+        }
+        //sometimes key_id is used to call keyDown from internal
+        if(Number.isInteger(key))return key;
+        if(key.length>1)return null;
+        var ret=this.findKeyId(key);
+        if(!ret)return null;
+        return ret;
     }
     allKeyUp(){
         for(let key_id of this.key_playing)this._keyUp(key_id);
@@ -124,6 +148,18 @@ class Keyboard{
     }
     getConjugateKey(key){
         return String.fromCharCode(key.charCodeAt(0)^32);
+    }
+    getConjugateKeyId(key_id){
+        var remain=key_id%12;
+        if(0<=remain&&remain<=3){
+            return remain%2==0?key_id+1:key_id-1;
+        }
+        else if(5<=remain&&remain<=10){
+            return remain%2==1?key_id+1:key_id-1;
+        }
+        else{
+            return key_id;
+        }
     }
     shiftRight(n){
         if(!n)n=1;
