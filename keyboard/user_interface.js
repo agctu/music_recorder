@@ -42,7 +42,9 @@ class UserInterface{
             ++this.nextReplayNote;
         }
         //this.updateByDiffTime(seq.actions[0].time-seq.startTime);
-        this.updateByDiffTime(this.noteDisplayTime*1000-(seq.actions[this.nextReplayNote-1].time-seq.startTime));
+        if(this.nextReplayNote>0){
+            this.updateByDiffTime(this.noteDisplayTime*1000-(seq.actions[this.nextReplayNote-1].time-seq.startTime));
+        }
         var tar=this;
         //FIXME the same potential problem as Keyboard._replay.
         this._replay=function(){
